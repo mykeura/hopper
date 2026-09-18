@@ -16,8 +16,14 @@ const DEFAULT_TEXT = DEFAULT_MODELS.join('\n')
 const EDITOR_ATTR = 'data-hopper-model-editor'
 const DETAIL_SELECTOR = '[data-testid="plugin-row-desktop:hopper"]'
 
-function pythonPathExpression() {
-  return "pathlib.Path(os.environ.get('HERMES_HOME') or pathlib.Path.home()/'.hermes')/'plugin-data'/'hopper'/'models.txt'"
+function managerCommand(subcommand, argument = '') {
+  // Hopper deliberately invokes its installed helper as a normal executable
+  // file. Hermes blocks interpreter -c/-e flags by design; using the helper
+  // keeps this operation auditable and avoids embedding executable code in the
+  // shell command. The payload argument is base64 and single-quoted, so model
+  // IDs never become shell syntax.
+  const manager = '"${HERMES_HOME:-$HOME/.hermes}/plugins/model-providers/hopper/manage.py"'
+  return argument ? `${manager} ${subcommand} '${argument}'` : `${manager} ${subcommand}`
 }
 
 function encodeUtf8Base64(value) {
@@ -28,16 +34,18 @@ function encodeUtf8Base64(value) {
 }
 
 async function readModels() {
-  const expr = pythonPathExpression()
-  const command = `python -c "import pathlib,os; p=${expr}; print(p.read_text(encoding='utf-8') if p.exists() else '')"`
-  const result = await host.request('shell.exec', { command })
+  const result = await host.request('shell.exec', { command: managerCommand('dump') })
+  if (typeof result?.code === 'number' && result.code !== 0) {
+    throw new Error(result.stderr || `Hopper helper exited with ${result.code}`)
+  }
+
   const stdout = typeof result?.stdout === 'string' ? result.stdout : ''
   const models = stdout
     .split(/\r?\n/)
     .map(line => line.trim())
-    .filter(line => line && !line.startsWith('#'))
+    .filter(Boolean)
 
-  return models.length ? models.join('\n') : DEFAULT_TEXT
+  return models.join('\n')
 }
 
 function validateModels(text) {
@@ -64,12 +72,12 @@ async function writeModels(text) {
   const models = validateModels(text)
   const normalized = models.join('\n') + (models.length ? '\n' : '')
   const encoded = encodeUtf8Base64(normalized)
-  const expr = pythonPathExpression()
-  const command = `python -c "import pathlib,os,base64; p=${expr}; p.parent.mkdir(parents=True,exist_ok=True); p.write_text(base64.b64decode('${encoded}').decode('utf-8'),encoding='utf-8')"`
-  const result = await host.request('shell.exec', { command })
+  const result = await host.request('shell.exec', {
+    command: managerCommand('replace-b64', encoded)
+  })
 
   if (typeof result?.code === 'number' && result.code !== 0) {
-    throw new Error(result.stderr || `shell.exec exited with ${result.code}`)
+    throw new Error(result.stderr || `Hopper helper exited with ${result.code}`)
   }
 
   return models

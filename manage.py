@@ -7,6 +7,8 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import binascii
 import os
 from pathlib import Path
 import sys
@@ -107,6 +109,49 @@ def cmd_list(_: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_dump(_: argparse.Namespace) -> int:
+    """Print only model IDs; empty catalogs produce no output.
+
+    This is intended for Hopper's Desktop half so it can read the catalog
+    without interpreting human-friendly CLI status text.
+    """
+    for model in read_models():
+        print(model)
+    return 0
+
+
+def cmd_replace_b64(args: argparse.Namespace) -> int:
+    """Replace the catalog from a base64-encoded UTF-8 payload.
+
+    The Desktop plugin calls this helper as an executable file. Keeping user
+    data in one opaque argument avoids shell quoting/injection problems and,
+    importantly, avoids interpreter -c/-e flags that Hermes blocks by design.
+    """
+    try:
+        raw = base64.b64decode(args.payload.encode("ascii"), validate=True)
+        text = raw.decode("utf-8")
+    except (UnicodeEncodeError, UnicodeDecodeError, binascii.Error) as exc:
+        raise ValueError("invalid base64/UTF-8 model payload") from exc
+
+    models: list[str] = []
+    seen: set[str] = set()
+    for line_no, raw_line in enumerate(text.splitlines(), start=1):
+        value = raw_line.strip()
+        if not value or value.startswith("#"):
+            continue
+        try:
+            value = validate_model_id(value)
+        except ValueError as exc:
+            raise ValueError(f"line {line_no}: {exc}") from exc
+        if value not in seen:
+            seen.add(value)
+            models.append(value)
+
+    write_models(models)
+    print(f"Saved {len(models)} model(s).")
+    return 0
+
+
 def cmd_add(args: argparse.Namespace) -> int:
     current = read_models()
     added = 0
@@ -151,6 +196,13 @@ def main() -> int:
 
     p = sub.add_parser("list", help="List configured models")
     p.set_defaults(func=cmd_list)
+
+    p = sub.add_parser("dump", help=argparse.SUPPRESS)
+    p.set_defaults(func=cmd_dump)
+
+    p = sub.add_parser("replace-b64", help=argparse.SUPPRESS)
+    p.add_argument("payload")
+    p.set_defaults(func=cmd_replace_b64)
 
     p = sub.add_parser("add", help="Add one or more OpenRouter model IDs")
     p.add_argument("models", nargs="+")

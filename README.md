@@ -13,9 +13,17 @@ inclusionai/ling-3.0-flash-fin:free
 inclusionai/ling-3.0-flash-sante:free
 ```
 
-DeepSeek V4 Flash 0731 was removed from Hopper's defaults in v1.1.0.
+DeepSeek V4 Flash 0731 was removed from Hopper's defaults in v1.1.1.
 
-## v1.1.0 layout
+### v1.1.1 security-guard compatibility
+
+The Desktop editor no longer uses `python -c` to read or write the model list.
+Hermes intentionally classifies interpreter `-c`/`-e` execution as dangerous.
+Hopper now calls its installed `manage.py` helper as a normal executable and
+sends writes as a validated base64 payload (`replace-b64`), avoiding the
+blocked execution pattern while keeping model text out of shell syntax.
+
+## v1.1.1 layout
 
 Hopper deliberately installs its two pieces separately:
 
@@ -39,7 +47,7 @@ name.
 ## Model editor inside Capabilities
 
 Current Hermes does not expose a supported contribution slot inside the plugin
-detail pane. Hopper v1.1.0 therefore uses a small DOM augmentation from its
+detail pane. Hopper v1.1.1 therefore uses a small DOM augmentation from its
 Desktop half to place the model editor directly below the Desktop/Agent rows.
 It does **not** patch Hermes source files.
 
@@ -54,8 +62,8 @@ dependent on that UI integration and can still be managed from the CLI/file.
 ## Install / upgrade
 
 ```bash
-unzip hopper-v1.1.0.zip
-cd hopper-v1.1.0
+unzip hopper-v1.1.1.zip
+cd hopper-v1.1.1
 bash install.sh
 ```
 
