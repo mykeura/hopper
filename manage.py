@@ -17,7 +17,6 @@ DEFAULT_MODELS = [
     "inclusionai/ling-3.0-flash-vl:free",
     "inclusionai/ling-3.0-flash-fin:free",
     "inclusionai/ling-3.0-flash-sante:free",
-    "deepseek/deepseek-v4-flash-0731:free",
 ]
 
 
@@ -134,7 +133,7 @@ def cmd_remove(args: argparse.Namespace) -> int:
 
 def cmd_reset(_: argparse.Namespace) -> int:
     write_models(DEFAULT_MODELS)
-    print("Restored Hopper's four default models.")
+    print("Restored Hopper's three default Ling models.")
     print(f"Hopper catalog: {models_file()}")
     return 0
 
@@ -161,7 +160,7 @@ def main() -> int:
     p.add_argument("models", nargs="+")
     p.set_defaults(func=cmd_remove)
 
-    p = sub.add_parser("reset", help="Restore Hopper's four bundled defaults")
+    p = sub.add_parser("reset", help="Restore Hopper's three bundled Ling models")
     p.set_defaults(func=cmd_reset)
 
     p = sub.add_parser("file", help="Print the Hopper models.txt path")

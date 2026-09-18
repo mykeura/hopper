@@ -2,180 +2,95 @@
 
 **Hopper for @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.**
 
-Hopper is a Hermes model-provider plugin backed by OpenRouter. It gives you a
-small, user-controlled catalog that appears as a separate provider in Hermes,
-while preserving Hermes' own OpenRouter integration and avoiding patches to the
-core model catalog.
+Hopper adds a small user-controlled OpenRouter catalog to Hermes without
+patching Hermes' built-in catalog.
 
-## Included models
-
-Hopper starts with:
+## Default models
 
 ```text
 inclusionai/ling-3.0-flash-vl:free
 inclusionai/ling-3.0-flash-fin:free
 inclusionai/ling-3.0-flash-sante:free
-deepseek/deepseek-v4-flash-0731:free
 ```
 
-You can remove any of them or add any valid OpenRouter model ID.
+DeepSeek V4 Flash 0731 was removed from Hopper's defaults in v1.1.0.
 
-## What changed from OpenRouter Custom
+## v1.1.0 layout
 
-Hopper replaces the earlier `openrouter-custom` prototype.
+Hopper deliberately installs its two pieces separately:
 
-- Provider renamed to **Hopper** everywhere.
-- DeepSeek V4 Flash 0731 (free) is included by default.
-- Hopper is packaged as a **unified Hermes plugin** with an agent/provider half
-  and a Desktop half.
-- It appears in **Capabilities → Plugins**.
-- The Desktop half provides a native Hopper model editor.
-- Existing `openrouter-custom` model selections are migrated by `install.sh`.
-- The editable model list lives outside the plugin install directory, so plugin
-  updates do not overwrite user choices.
+```text
+~/.hermes/plugins/model-providers/hopper/   # provider used by the model picker
+~/.hermes/desktop-plugins/hopper/           # Capabilities UI helper
+~/.hermes/plugin-data/hopper/models.txt     # user-owned model list
+```
 
-## Important Hermes UI limitation
+This matters because Hermes filters `model-providers/*` from the ordinary Agent
+plugin inventory. As a result, **Capabilities → Plugins → Hopper** shows:
 
-Current Hermes versions do not expose an SDK hook that lets third-party plugins
-insert arbitrary controls such as a `Textarea` directly into the right-hand
-detail pane of **Capabilities → Plugins**. That pane currently owns its Desktop
-and Agent switches itself.
+```text
+Desktop                    [on/off]
+Agent in Hermes (profile)        —
+```
 
-Hopper therefore uses the supported Desktop Plugin SDK:
+There is no meaningless Agent switch and no Agent version beside the Hopper
+name.
 
-1. Hopper appears normally in **Capabilities → Plugins**, with its name,
-   description and Desktop/Agent controls.
-2. Enabling the Desktop half adds a **Hopper** page to Hermes.
-3. That page contains the editable model textbox requested for Hopper.
-4. `Ctrl/Cmd+K` → **Hopper: Manage OpenRouter models** opens the same editor.
+## Model editor inside Capabilities
 
-This avoids patching Hermes Desktop internals and keeps Hopper compatible with
-normal Hermes updates.
+Current Hermes does not expose a supported contribution slot inside the plugin
+detail pane. Hopper v1.1.0 therefore uses a small DOM augmentation from its
+Desktop half to place the model editor directly below the Desktop/Agent rows.
+It does **not** patch Hermes source files.
 
-## Install / upgrade from the previous prototype
+The editor contains one OpenRouter model ID per line. Add or remove lines and
+click **Save models**. The provider reads the same `models.txt` file the next
+time Hermes refreshes the model list.
+
+Because this is DOM augmentation rather than a public SDK slot, a future Hermes
+UI refactor may require updating Hopper's selector. The provider itself is not
+dependent on that UI integration and can still be managed from the CLI/file.
+
+## Install / upgrade
 
 ```bash
-unzip hopper-v1.0.0.zip
-cd hopper
+unzip hopper-v1.1.0.zip
+cd hopper-v1.1.0
 bash install.sh
 ```
 
-The installer places Hopper at:
+The installer:
 
-```text
-~/.hermes/plugins/hopper/
-```
+- migrates an existing Hopper/OpenRouter Custom model list;
+- removes the DeepSeek default added by Hopper v1.0.0;
+- backs up the previous unified Hopper package;
+- removes stale unified-package markers from the Desktop half;
+- installs Hopper as a hidden model-provider plus a standalone Desktop plugin.
 
-and keeps the user's catalog at:
+Then restart Hermes and use **Capabilities → Plugins → Rescan**.
 
-```text
-~/.hermes/plugin-data/hopper/models.txt
-```
-
-If it finds the previous prototype at:
-
-```text
-~/.hermes/plugins/model-providers/openrouter-custom/
-```
-
-it moves that directory to `~/.hermes/plugin-backups/` so Hermes does not show
-both providers.
-
-After installing:
-
-1. Restart Hermes / the gateway.
-2. Open **Capabilities → Plugins** and choose **Rescan**.
-3. Enable Hopper's Desktop half.
-4. Open **Hopper** from the sidebar or Command Palette.
-5. If the editor cannot reach its backend, enable Hopper's Agent half and
-   restart the gateway.
-6. Open the model picker and select **Hopper**.
-
-Hopper reuses your existing `OPENROUTER_API_KEY` and the standard OpenRouter
-endpoint `https://openrouter.ai/api/v1`.
-
-## Model editor
-
-The Hopper page contains one model ID per line. For example:
-
-```text
-inclusionai/ling-3.0-flash-vl:free
-deepseek/deepseek-v4-flash-0731:free
-qwen/qwen3-coder
-```
-
-Click **Save models**, then reopen the Hermes model picker.
-
-## CLI management
-
-List:
+## CLI
 
 ```bash
-python ~/.hermes/plugins/hopper/manage.py list
+python ~/.hermes/plugins/model-providers/hopper/manage.py list
+python ~/.hermes/plugins/model-providers/hopper/manage.py add "provider/model-id"
+python ~/.hermes/plugins/model-providers/hopper/manage.py remove "provider/model-id"
+python ~/.hermes/plugins/model-providers/hopper/manage.py reset
 ```
 
-Add:
-
-```bash
-python ~/.hermes/plugins/hopper/manage.py add "provider/model-id"
-```
-
-Remove:
-
-```bash
-python ~/.hermes/plugins/hopper/manage.py remove "provider/model-id"
-```
-
-Restore the four defaults:
-
-```bash
-python ~/.hermes/plugins/hopper/manage.py reset
-```
-
-Show the data file:
-
-```bash
-python ~/.hermes/plugins/hopper/manage.py file
-```
-
-You may also edit `models.txt` directly.
-
-## Architecture
-
-Hopper subclasses Hermes' bundled `OpenRouterProfile`. It therefore reuses
-Hermes' OpenRouter-specific behavior rather than cloning or patching it.
-
-```text
-hopper/
-├── __init__.py
-├── plugin.yaml
-├── manage.py
-├── LICENSE
-├── desktop/
-│   └── plugin.js
-└── dashboard/
-    ├── manifest.json
-    └── plugin_api.py
-```
-
-The Desktop editor talks only to Hopper's namespaced backend API. The backend
-reads and writes Hopper's `models.txt`; it does not store your OpenRouter API
-key.
+Hopper reuses your normal `OPENROUTER_API_KEY`.
 
 ## License
 
 MIT License.
 
-SPDX headers in the source identify:
+Source files carry:
 
 ```text
 SPDX-License-Identifier: MIT
 Copyright (c) 2026 Miguel Euraque
 ```
 
-Hermes Agent is a separate project developed by Nous Research and licensed
-under MIT. OpenRouter is a third-party service; use of OpenRouter and individual
-models is subject to their respective terms.
-
-Hopper is an independent plugin and is not affiliated with or endorsed by Nous
-Research, OpenRouter, InclusionAI, or DeepSeek.
+Hermes Agent and OpenRouter are separate projects/services. Hopper is an
+independent plugin and is not affiliated with or endorsed by Nous Research,
+OpenRouter, or InclusionAI.
