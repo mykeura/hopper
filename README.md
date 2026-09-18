@@ -1,6 +1,6 @@
 # Hopper
 
-**Hopper for @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.**
+**Hopper by @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.**
 
 Hopper adds a small user-controlled OpenRouter catalog to Hermes without
 patching Hermes' built-in catalog.

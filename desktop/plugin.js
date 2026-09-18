@@ -4,7 +4,7 @@
 import { host } from '@hermes/plugin-sdk'
 
 const DESCRIPTION =
-  'Hopper for @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.'
+  'Hopper by @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.'
 
 const DEFAULT_MODELS = [
   'inclusionai/ling-3.0-flash-vl:free',

@@ -24,7 +24,7 @@ except ImportError as exc:
 
 
 DESCRIPTION = (
-    "Hopper for @mykeura - Add and manage custom OpenRouter models in Hermes "
+    "Hopper by @mykeura - Add and manage custom OpenRouter models in Hermes "
     "without modifying the core catalog."
 )
 
