@@ -76,15 +76,14 @@ python ~/.hermes/plugins/model-providers/hopper/manage.py reset
 
 Hopper reuses your normal `OPENROUTER_API_KEY`.
 
+## A small way to support the project
+
+If you are considering the Nous Portal Personal plan, you can use [my Nous Portal referral link](https://portal.nousresearch.com/r/mykeura). It takes **$15 off your first month** and gives me a **$10 referral credit** that helps cover the API usage behind my ongoing work on Hopper and related Hermes plugins. It is entirely optional, but it is a simple way for both of us to benefit.
+
+The offer is for new customers starting a new Personal subscription. It applies to the first invoice, and each payment card can be used for only one referral; if the card has already backed another referral, the discount is reversed and no referral reward is paid.
+
 ## License
 
 MIT License.
-
-Source files carry:
-
-```text
-SPDX-License-Identifier: MIT
-Copyright (c) 2026 Miguel Euraque
-```
 
 Hermes Agent and OpenRouter are separate projects/services. Hopper is an independent plugin and is not affiliated with or endorsed by Nous Research, OpenRouter, or InclusionAI.
