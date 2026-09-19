@@ -2,8 +2,9 @@
 
 **Hopper by @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.**
 
-Hopper adds a small user-controlled OpenRouter catalog to Hermes without
-patching Hermes' built-in catalog.
+![Hopper for Hermes](images/hopper.jpg)
+
+Hopper adds a small user-controlled OpenRouter catalog to Hermes without patching Hermes' built-in catalog.
 
 ## Default models
 
@@ -17,11 +18,7 @@ DeepSeek V4 Flash 0731 was removed from Hopper's defaults in v1.1.1.
 
 ### v1.1.1 security-guard compatibility
 
-The Desktop editor no longer uses `python -c` to read or write the model list.
-Hermes intentionally classifies interpreter `-c`/`-e` execution as dangerous.
-Hopper now calls its installed `manage.py` helper as a normal executable and
-sends writes as a validated base64 payload (`replace-b64`), avoiding the
-blocked execution pattern while keeping model text out of shell syntax.
+The Desktop editor no longer uses `python -c` to read or write the model list. Hermes intentionally classifies interpreter `-c`/`-e` execution as dangerous. Hopper now calls its installed `manage.py` helper as a normal executable and sends writes as a validated base64 payload (`replace-b64`), avoiding the blocked execution pattern while keeping model text out of shell syntax.
 
 ## v1.1.1 layout
 
@@ -33,31 +30,22 @@ Hopper deliberately installs its two pieces separately:
 ~/.hermes/plugin-data/hopper/models.txt     # user-owned model list
 ```
 
-This matters because Hermes filters `model-providers/*` from the ordinary Agent
-plugin inventory. As a result, **Capabilities → Plugins → Hopper** shows:
+This matters because Hermes filters `model-providers/*` from the ordinary Agent plugin inventory. As a result, **Capabilities → Plugins → Hopper** shows:
 
 ```text
 Desktop                    [on/off]
 Agent in Hermes (profile)        —
 ```
 
-There is no meaningless Agent switch and no Agent version beside the Hopper
-name.
+There is no meaningless Agent switch and no Agent version beside the Hopper name.
 
 ## Model editor inside Capabilities
 
-Current Hermes does not expose a supported contribution slot inside the plugin
-detail pane. Hopper v1.1.1 therefore uses a small DOM augmentation from its
-Desktop half to place the model editor directly below the Desktop/Agent rows.
-It does **not** patch Hermes source files.
+Current Hermes does not expose a supported contribution slot inside the plugin detail pane. Hopper v1.1.1 therefore uses a small DOM augmentation from its Desktop half to place the model editor directly below the Desktop/Agent rows. It does **not** patch Hermes source files.
 
-The editor contains one OpenRouter model ID per line. Add or remove lines and
-click **Save models**. The provider reads the same `models.txt` file the next
-time Hermes refreshes the model list.
+The editor contains one OpenRouter model ID per line. Add or remove lines and click **Save models**. The provider reads the same `models.txt` file the next time Hermes refreshes the model list.
 
-Because this is DOM augmentation rather than a public SDK slot, a future Hermes
-UI refactor may require updating Hopper's selector. The provider itself is not
-dependent on that UI integration and can still be managed from the CLI/file.
+Because this is DOM augmentation rather than a public SDK slot, a future Hermes UI refactor may require updating Hopper's selector. The provider itself is not dependent on that UI integration and can still be managed from the CLI/file.
 
 ## Install / upgrade
 
@@ -99,6 +87,4 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2026 Miguel Euraque
 ```
 
-Hermes Agent and OpenRouter are separate projects/services. Hopper is an
-independent plugin and is not affiliated with or endorsed by Nous Research,
-OpenRouter, or InclusionAI.
+Hermes Agent and OpenRouter are separate projects/services. Hopper is an independent plugin and is not affiliated with or endorsed by Nous Research, OpenRouter, or InclusionAI.
