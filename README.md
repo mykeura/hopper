@@ -14,13 +14,13 @@ inclusionai/ling-3.0-flash-fin:free
 inclusionai/ling-3.0-flash-sante:free
 ```
 
-DeepSeek V4 Flash 0731 was removed from Hopper's defaults in v1.1.1.
+DeepSeek V4 Flash 0731 is not part of Hopper's defaults.
 
-### v1.1.1 security-guard compatibility
+### v1.2.0 security-guard compatibility
 
 The Desktop editor no longer uses `python -c` to read or write the model list. Hermes intentionally classifies interpreter `-c`/`-e` execution as dangerous. Hopper now calls its installed `manage.py` helper as a normal executable and sends writes as a validated base64 payload (`replace-b64`), avoiding the blocked execution pattern while keeping model text out of shell syntax.
 
-## v1.1.1 layout
+## v1.2.0 layout
 
 Hopper deliberately installs its two pieces separately:
 
@@ -41,17 +41,17 @@ There is no meaningless Agent switch and no Agent version beside the Hopper name
 
 ## Model editor inside Capabilities
 
-Current Hermes does not expose a supported contribution slot inside the plugin detail pane. Hopper v1.1.1 therefore uses a small DOM augmentation from its Desktop half to place the model editor directly below the Desktop/Agent rows. It does **not** patch Hermes source files.
+Current Hermes does not expose a supported contribution slot inside the plugin detail pane. Hopper v1.2.0 therefore uses a small DOM augmentation from its Desktop half to add a **Settings** button to the Hopper row. The editor opens lazily in an accessible modal outside the row; it does **not** patch Hermes source files or open when the row is selected.
 
-The editor contains one OpenRouter model ID per line. Add or remove lines and click **Save models**. The provider reads the same `models.txt` file the next time Hermes refreshes the model list.
+Click **Settings** to edit one OpenRouter model ID per line. Add or remove lines and click **Save models**. **Reset Ling defaults** restores Hopper's three bundled models. The provider reads the same `models.txt` file the next time Hermes refreshes the model list. Close the modal with its close button, Escape, or the backdrop; focus returns to Settings.
 
 Because this is DOM augmentation rather than a public SDK slot, a future Hermes UI refactor may require updating Hopper's selector. The provider itself is not dependent on that UI integration and can still be managed from the CLI/file.
 
 ## Install / upgrade
 
 ```bash
-unzip hopper-v1.1.1.zip
-cd hopper-v1.1.1
+unzip hopper-v1.2.0.zip
+cd hopper-v1.2.0
 bash install.sh
 ```
 

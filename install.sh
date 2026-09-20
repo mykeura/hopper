@@ -84,7 +84,7 @@ rm -f "$DESKTOP_DEST/.hermes-package.json"
 rm -f "$DESKTOP_DEST/hermes-package.json"
 
 echo
-echo "Hopper v1.1.1 installed."
+echo "Hopper v1.2.0 installed."
 echo
 echo "Model provider:"
 echo "  $PROVIDER_DEST"
@@ -97,4 +97,4 @@ echo "Next:"
 echo "  1. Restart Hermes / its gateway."
 echo "  2. Open Capabilities -> Plugins and Rescan."
 echo "  3. Select Hopper. Desktop should have a switch; Agent in Hermes should show —."
-echo "  4. The OpenRouter model editor appears below those rows while Hopper Desktop is enabled."
+echo "  4. Select Settings in Hopper to open the OpenRouter models modal."
