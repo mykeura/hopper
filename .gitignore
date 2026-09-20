@@ -6,9 +6,5 @@ __pycache__/
 venv/
 .DS_Store
 
-# Personal GitNexus reference files
-/.gitnexus/
-/.claude/
-/AGENTS.md
-/CLAUDE.md
 /PROGRESS.md
+.codegraph/
