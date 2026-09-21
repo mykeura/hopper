@@ -84,7 +84,7 @@ rm -f "$DESKTOP_DEST/.hermes-package.json"
 rm -f "$DESKTOP_DEST/hermes-package.json"
 
 echo
-echo "Hopper v1.2.0 installed."
+echo "Hopper v1.3.0 installed."
 echo
 echo "Model provider:"
 echo "  $PROVIDER_DEST"

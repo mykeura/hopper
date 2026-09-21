@@ -1,0 +1,24 @@
+# Copy this file to hermes-agent/plugin-catalog/hopper.yaml after replacing
+# every __COMMIT_SHA_40_HEX__ marker with the exact 40-character commit SHA.
+# The template intentionally does not invent a SHA: the catalog requires the
+# final reviewed commit to be pinned before the entry can pass validation.
+
+name: hopper
+repo: https://github.com/mykeura/hopper
+sha: __COMMIT_SHA_40_HEX__
+subdir: catalog
+description: "Hopper — manage a personal list of OpenRouter models in Hermes."
+maintainer: mykeura
+tier: community
+category: models
+requires_hermes: ">=0.21.3"
+docs_url: https://github.com/mykeura/hopper#readme
+version: "1.3.0"
+image: https://raw.githubusercontent.com/mykeura/hopper/__COMMIT_SHA_40_HEX__/images/hopper-catalog.jpg
+platforms: [linux, macos]
+capabilities:
+  provides_tools: []
+  provides_hooks: []
+  provides_middleware: []
+  requires_env:
+    - OPENROUTER_API_KEY

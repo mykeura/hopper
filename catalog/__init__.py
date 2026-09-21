@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 Miguel Euraque
 
-"""Hopper model provider for Hermes Agent.
+"""Hopper's catalog-installable Hermes model provider.
 
-Hopper exposes a user-curated list of OpenRouter model IDs without modifying
-Hermes' built-in OpenRouter catalog.
+The catalog package is intentionally self-contained.  Hermes exposes the
+public provider lookup before loading bundled provider modules, so the
+OpenRouter profile can be imported reliably both during normal discovery and
+inside ``hermes plugins validate``.
 """
 
 from __future__ import annotations
@@ -15,22 +17,25 @@ from pathlib import Path
 from hermes_cli.providers import get_provider
 from providers import get_provider_profile, register_provider
 
+
+# Resolve the public provider definition first.  The subsequent profile lookup
+# runs Hermes' normal provider discovery, which establishes the public
+# ``plugins.model_providers.openrouter`` import path before importing the class.
 try:
-    # Hermes exposes bundled model-provider modules through the stable
-    # ``plugins.model_providers`` namespace after provider discovery. Resolve
-    # the base provider first so importing this manual plugin does not depend
-    # on discovery having happened elsewhere in the process.
-    try:
-        get_provider("openrouter", allow_network=False)
-    except TypeError:  # Older Hermes releases do not expose allow_network.
-        get_provider("openrouter")
-    get_provider_profile("openrouter")
-    from plugins.model_providers.openrouter import OpenRouterProfile
-except ImportError as exc:
+    _OPENROUTER_PROVIDER = get_provider("openrouter", allow_network=False)
+except TypeError:
+    # Older Hermes releases accepted the same public lookup without the
+    # optional network-control keyword.  The manifest minimum supports the
+    # keyword, but keeping this fallback makes direct loading friendlier.
+    _OPENROUTER_PROVIDER = get_provider("openrouter")
+_OPENROUTER_PROFILE = get_provider_profile("openrouter")
+if _OPENROUTER_PROVIDER is None or _OPENROUTER_PROFILE is None:
     raise ImportError(
         "Hopper requires a Hermes version that includes the bundled OpenRouter "
         "model-provider plugin."
-    ) from exc
+    )
+
+from plugins.model_providers.openrouter import OpenRouterProfile  # noqa: E402
 
 
 DESCRIPTION = (
@@ -89,7 +94,7 @@ def _read_models() -> list[str]:
             seen.add(model)
             models.append(model)
 
-    # Empty is intentional: users are allowed to hide every Hopper model.
+    # Empty is intentional: users may hide every Hopper model.
     return models
 
 
