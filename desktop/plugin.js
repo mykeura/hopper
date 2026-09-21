@@ -196,6 +196,25 @@ function installModelSettings(ctx) {
     })
   }
 
+  // The app paints the Agent+Desktop kind badge with its tertiary stroke,
+  // which is nearly invisible on dark themes. Nudge it to the secondary
+  // stroke (same as our Settings button) while mounted; restored on dispose.
+  const KIND_BADGE_ATTR = 'data-hopper-kind-badge'
+  const strengthenKindBadge = scope => {
+    const target = [...(scope?.querySelectorAll(BADGES_SELECTOR) ?? [])]
+      .flatMap(container => [...container.children])
+      .find(child => !child.hasAttribute(MOUNT_ATTR) && /agent \+ desktop/i.test(child.textContent || ''))
+    if (!target || target.hasAttribute(KIND_BADGE_ATTR)) return
+    target.setAttribute(KIND_BADGE_ATTR, 'true')
+    target.style.borderColor = 'var(--ui-stroke-secondary)'
+  }
+  const restoreKindBadge = () => {
+    document.querySelectorAll(`[${KIND_BADGE_ATTR}]`).forEach(node => {
+      node.style.borderColor = ''
+      node.removeAttribute(KIND_BADGE_ATTR)
+    })
+  }
+
   const clearEscape = () => {    if (escapeListener) {
       window.removeEventListener('keydown', escapeListener)
       escapeListener = null
@@ -220,6 +239,7 @@ function installModelSettings(ctx) {
     mount?.remove()
     restoreFolderSlot()
     restoreAgentToggle()
+    restoreKindBadge()
     row = null
     badges = null
     mount = null
@@ -436,9 +456,11 @@ function installModelSettings(ctx) {
         mount.append(button)
         nextBadges.append(mount)
         hideAgentToggle(nextRow)
+        strengthenKindBadge(nextRow)
       } else {
         removeFolderSlot(nextCell)
         hideAgentToggle(nextRow)
+        strengthenKindBadge(nextRow)
       }
     } finally {
       syncing = false
