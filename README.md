@@ -8,7 +8,7 @@ Hopper gives you a small, personal OpenRouter catalog that you can edit from Her
 
 ## Default models
 
-Hopper v1.3.0 starts with these models:
+Hopper v1.2.0 starts with these models:
 
 ```text
 inclusionai/ling-3.0-flash-vl:free
@@ -22,47 +22,16 @@ inclusionai/ling-3.0-flash-sante:free
 
 ## Manage models in Hermes
 
-### Catalog installation
+1. Open **Capabilities → Plugins** and select **Hopper**.
+2. Click **Settings** to open the OpenRouter model list.
+3. Add or remove one OpenRouter model ID per line, then click **Save models**.
+4. To return to the bundled list, click **Reset Ling defaults**.
 
-After installing from the catalog and enabling both **Agent** and **Desktop**,
-open the Hopper page from the Hermes sidebar. You can also open it from the
-command palette with **Hopper: Manage OpenRouter models**. Add or remove one
-OpenRouter model ID per line, then choose **Save models**. To return to the
-bundled list, choose **Reset Ling defaults**. Reopen the Hermes model picker so
-the updated catalog appears in the selector.
+Close the settings window with its close button, press **Escape**, or click the backdrop. After saving, reopen the Hermes model picker so the updated catalog appears in the selector.
 
-### Manual installation
+## Install or upgrade
 
-For the manual distribution, open **Capabilities → Plugins**, select
-**Hopper**, and click **Settings** to open the model-list modal. Add or remove
-one OpenRouter model ID per line, then click **Save models**. To return to the
-bundled list, click **Reset Ling defaults**. Close the modal with its close
-button, press **Escape**, or click the backdrop.
-
-## Install from the Hermes catalog (recommended)
-
-Once Hopper is available in the official Hermes plugin catalog, install it by
-name:
-
-```bash
-hermes plugins install hopper
-```
-
-This installs the reviewed catalog version. Set `OPENROUTER_API_KEY` in your
-Hermes environment, restart Hermes (or its gateway), and open
-**Capabilities → Plugins**. Select **Hopper**, enable both **Agent** and
-**Desktop**, then open the Hopper page from the sidebar or use the command
-palette command **Hopper: Manage OpenRouter models**. The Agent and Desktop
-switches are independent; both must be enabled for the complete Hopper
-experience.
-The catalog page is provided through the official Hermes Desktop SDK.
-
-Catalog installation does not run this repository's `install.sh`; the script
-is only the alternative manual installer described below.
-
-## Manual installation (alternative)
-
-From the extracted Hopper v1.3.0 release directory, run:
+From the extracted Hopper v1.2.0 release directory, run:
 
 ```bash
 bash install.sh
@@ -72,28 +41,13 @@ The installer keeps your existing Hopper model list when upgrading and migrates 
 
 1. Restart Hermes (or its gateway).
 2. Open **Capabilities → Plugins** and click **Rescan**.
-3. Select Hopper and enable its **Desktop** capability. The manual
-   distribution keeps the model-provider half separate, so Hermes shows a dash
-   for **Agent**; the catalog distribution above combines both capabilities.
+3. Select Hopper and enable its **Desktop** capability.
 4. Open **Settings** to confirm or edit the model list.
 5. Choose an enabled Hopper model from the Hermes model selector.
 
-No additional application configuration is required beyond your normal
-`OPENROUTER_API_KEY`.
-
 ## Optional CLI
 
-The catalog installation stores its helper at `~/.hermes/plugins/hopper/manage.py`:
-
-```bash
-python ~/.hermes/plugins/hopper/manage.py list
-python ~/.hermes/plugins/hopper/manage.py add "provider/model-id"
-python ~/.hermes/plugins/hopper/manage.py remove "provider/model-id"
-python ~/.hermes/plugins/hopper/manage.py reset
-```
-
-The manual installation keeps its helper at
-`~/.hermes/plugins/model-providers/hopper/manage.py`:
+You can also manage the catalog from the command line:
 
 ```bash
 python ~/.hermes/plugins/model-providers/hopper/manage.py list

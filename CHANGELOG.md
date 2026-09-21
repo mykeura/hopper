@@ -5,27 +5,6 @@ the corresponding Git commit dates. There are no release tags in this
 repository, so version headings are based on the versions recorded in the
 plugin manifest.
 
-## [1.3.0] - 2026-09-20
-
-### Added
-
-- Prepared the plugin for submission to the official Hermes plugin catalog,
-  including a catalog entry template and a catalog-sized banner image.
-- Added the SDK-based Hopper page for the catalog distribution, reachable from
-  the sidebar and command palette.
-
-### Changed
-
-- Updated the manual distribution, installer messages, and user guide to
-  version 1.3.0.
-- Documented catalog installation as the recommended path and clarified that
-  both the Agent and Desktop capabilities should be enabled, with separate
-  instructions for the catalog page and the manual Settings modal.
-- Declared the catalog distribution's verified Hermes minimum and Linux/macOS
-  platform support in its catalog-entry template.
-- Ensured the manual model provider discovers Hermes' bundled OpenRouter
-  profile before extending it.
-
 ## [1.2.0] - 2026-09-20
 
 ### Added

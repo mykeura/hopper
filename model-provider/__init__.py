@@ -12,19 +12,9 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from hermes_cli.providers import get_provider
-from providers import get_provider_profile, register_provider
+from providers import register_provider
 
 try:
-    # Hermes exposes bundled model-provider modules through the stable
-    # ``plugins.model_providers`` namespace after provider discovery. Resolve
-    # the base provider first so importing this manual plugin does not depend
-    # on discovery having happened elsewhere in the process.
-    try:
-        get_provider("openrouter", allow_network=False)
-    except TypeError:  # Older Hermes releases do not expose allow_network.
-        get_provider("openrouter")
-    get_provider_profile("openrouter")
     from plugins.model_providers.openrouter import OpenRouterProfile
 except ImportError as exc:
     raise ImportError(
