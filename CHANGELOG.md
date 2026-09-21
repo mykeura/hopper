@@ -5,6 +5,17 @@ the corresponding Git commit dates. There are no release tags in this
 repository, so version headings are based on the versions recorded in the
 plugin manifest.
 
+## [1.3.0] - 2026-09-21
+
+### Changed
+
+- Repackaged Hopper as a unified Agent+Desktop plugin directory that installs
+  with `hermes plugins install`, as required by the Hermes plugin catalog.
+  Install by copying this directory to `~/.hermes/plugins/hopper`; the
+  `install.sh` split-installer was removed.
+- No functional or visual changes: same Settings modal, same validation,
+  same Ling defaults, same `manage.py` CLI (now at `plugins/hopper/`).
+
 ## [1.2.0] - 2026-09-20
 
 ### Added

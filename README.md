@@ -8,7 +8,7 @@ Hopper gives you a small, personal OpenRouter catalog that you can edit from Her
 
 ## Default models
 
-Hopper v1.2.0 starts with these models:
+Hopper v1.3.0 starts with these models:
 
 ```text
 inclusionai/ling-3.0-flash-vl:free
@@ -31,29 +31,27 @@ Close the settings window with its close button, press **Escape**, or click the 
 
 ## Install or upgrade
 
-From the extracted Hopper v1.2.0 release directory, run:
-
-```bash
-bash install.sh
-```
-
-The installer keeps your existing Hopper model list when upgrading and migrates an earlier OpenRouter Custom list when available. After installation or an upgrade:
+Copy this directory to `~/.hermes/plugins/hopper` (or install it with
+`hermes plugins install owner/repo`), then:
 
 1. Restart Hermes (or its gateway).
 2. Open **Capabilities → Plugins** and click **Rescan**.
-3. Select Hopper and enable its **Desktop** capability.
+3. Select Hopper and enable its **Desktop** and **Agent** halves.
 4. Open **Settings** to confirm or edit the model list.
-5. Choose an enabled Hopper model from the Hermes model selector.
+5. Choose a Hopper model from the Hermes model selector.
+
+Your existing model list (`~/.hermes/plugin-data/hopper/models.txt`) is kept
+on upgrade.
 
 ## Optional CLI
 
 You can also manage the catalog from the command line:
 
 ```bash
-python ~/.hermes/plugins/model-providers/hopper/manage.py list
-python ~/.hermes/plugins/model-providers/hopper/manage.py add "provider/model-id"
-python ~/.hermes/plugins/model-providers/hopper/manage.py remove "provider/model-id"
-python ~/.hermes/plugins/model-providers/hopper/manage.py reset
+python ~/.hermes/plugins/hopper/manage.py list
+python ~/.hermes/plugins/hopper/manage.py add "provider/model-id"
+python ~/.hermes/plugins/hopper/manage.py remove "provider/model-id"
+python ~/.hermes/plugins/hopper/manage.py reset
 ```
 
 Hopper uses your normal `OPENROUTER_API_KEY`.
