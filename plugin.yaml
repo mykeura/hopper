@@ -7,3 +7,7 @@ version: 1.2.0
 description: Hopper by @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.
 author: Miguel Euraque
 license: MIT
+homepage: https://github.com/mykeura/hopper
+tags: [models, openrouter]
+requires_env:
+  - OPENROUTER_API_KEY

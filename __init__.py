@@ -16,11 +16,22 @@ from providers import register_provider
 
 try:
     from plugins.model_providers.openrouter import OpenRouterProfile
-except ImportError as exc:
-    raise ImportError(
-        "Hopper requires a Hermes version that includes the bundled OpenRouter "
-        "model-provider plugin."
-    ) from exc
+except ImportError:
+    # Standalone import (e.g. the `hermes plugins validate` capability probe
+    # runs before bundled provider discovery, so the
+    # `plugins.model_providers.*` alias does not exist yet). Trigger discovery
+    # through the public API and retry. Inside normal discovery this branch
+    # never runs because bundled plugins are imported first.
+    try:
+        from providers import get_provider_profile
+
+        get_provider_profile("openrouter")
+        from plugins.model_providers.openrouter import OpenRouterProfile
+    except ImportError as exc:
+        raise ImportError(
+            "Hopper requires a Hermes version that includes the bundled OpenRouter "
+            "model-provider plugin."
+        ) from exc
 
 
 DESCRIPTION = (

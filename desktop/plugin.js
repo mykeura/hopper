@@ -13,20 +13,58 @@ const DEFAULT_MODELS = [
 ]
 
 const DEFAULT_TEXT = DEFAULT_MODELS.join('\n')
-const DETAIL_SELECTOR = '[data-testid="plugin-row-desktop:hopper"]'
+// Unified catalog packages merge both halves into one row (`plugin-row-hopper`);
+// standalone disk installs keep the legacy row id (`plugin-row-desktop:hopper`).
+const DETAIL_SELECTOR = '[data-testid="plugin-row-hopper"], [data-testid="plugin-row-desktop:hopper"]'
 const BADGES_SELECTOR = ':scope > [role="cell"] > div.min-w-0.flex-1 > div.flex.flex-wrap'
+const ROW_CELLS_SELECTOR = ':scope > [role="cell"]'
 const FOLDER_ICON_SELECTOR = 'i.codicon-folder-opened'
 const MOUNT_ATTR = 'data-hopper-settings-mount'
 const OVERLAY_ATTR = 'data-hopper-model-overlay'
+const AGENT_CELL_ATTR = 'data-hopper-agent-cell'
+const AGENT_DASH_ATTR = 'data-hopper-agent-dash'
 
-function managerCommand(subcommand, argument) {
+const MANAGER_CATALOG = '"${HERMES_HOME:-$HOME/.hermes}/plugins/hopper/manage.py"'
+const MANAGER_LEGACY = '"${HERMES_HOME:-$HOME/.hermes}/plugins/model-providers/hopper/manage.py"'
+
+function managerCommand(subcommand, argument, manager = MANAGER_CATALOG) {
   // Hopper deliberately invokes its installed helper as a normal executable
   // file. Hermes blocks interpreter -c/-e flags by design; using the helper
   // keeps this operation auditable and avoids embedding executable code in the
   // shell command. The payload argument is base64 and single-quoted, so model
   // IDs never become shell syntax.
-  const manager = '"${HERMES_HOME:-$HOME/.hermes}/plugins/model-providers/hopper/manage.py"'
   return argument !== undefined ? `${manager} ${subcommand} '${argument}'` : `${manager} ${subcommand}`
+}
+
+async function runManager(subcommand, argument) {
+  // Unified catalog layout first, legacy split-install path as fallback.
+  // Only missing-helper failures fall through; real helper errors throw.
+  const commands = [
+    managerCommand(subcommand, argument, MANAGER_CATALOG),
+    managerCommand(subcommand, argument, MANAGER_LEGACY)
+  ]
+  let lastError = null
+  for (const command of commands) {
+    let result = null
+    try {
+      result = await host.request('shell.exec', { command })
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      continue
+    }
+    if (typeof result?.code === 'number' && result.code !== 0) {
+      const message = result.stderr || `Hopper helper exited with ${result.code}`
+      // Exit 127 / shell "not found" signals a missing helper -> try next path.
+      // Any other non-zero exit is the helper reporting a real error.
+      if (/not found|no such file|exit 127|^127$/i.test(message)) {
+        lastError = new Error(message)
+        continue
+      }
+      throw new Error(message)
+    }
+    return result
+  }
+  throw lastError ?? new Error('Hopper helper not found')
 }
 
 function encodeUtf8Base64(value) {
@@ -37,10 +75,7 @@ function encodeUtf8Base64(value) {
 }
 
 async function readModels() {
-  const result = await host.request('shell.exec', { command: managerCommand('dump') })
-  if (typeof result?.code === 'number' && result.code !== 0) {
-    throw new Error(result.stderr || `Hopper helper exited with ${result.code}`)
-  }
+  const result = await runManager('dump')
   const stdout = typeof result?.stdout === 'string' ? result.stdout : ''
   return stdout
     .split(/\r?\n/)
@@ -70,12 +105,7 @@ function validateModels(text) {
 async function writeModels(text) {
   const models = validateModels(text)
   const normalized = models.join('\n') + (models.length ? '\n' : '')
-  const result = await host.request('shell.exec', {
-    command: managerCommand('replace-b64', encodeUtf8Base64(normalized))
-  })
-  if (typeof result?.code === 'number' && result.code !== 0) {
-    throw new Error(result.stderr || `Hopper helper exited with ${result.code}`)
-  }
+  await runManager('replace-b64', encodeUtf8Base64(normalized))
   return models
 }
 
@@ -136,8 +166,39 @@ function installModelSettings(ctx) {
     candidate.remove()
   }
 
-  const clearEscape = () => {
-    if (escapeListener) {
+  // The unified package row carries an Agent-half switch that is a no-op for
+  // model-provider plugins (provider discovery ignores plugins.enabled), so
+  // it only misleads. Hide it behind the same dash the app renders for a
+  // missing half. The switch node itself is kept (hidden, not removed) so
+  // React reconciliation never loses its reference.
+  const hideAgentToggle = scope => {
+    const cells = scope?.querySelectorAll(ROW_CELLS_SELECTOR) ?? []
+    const agentCell = cells[2] ?? null
+    if (!agentCell || agentCell.hasAttribute(AGENT_CELL_ATTR)) return
+    const toggle = agentCell.querySelector('button[role="switch"]')
+    if (!toggle) return
+    agentCell.setAttribute(AGENT_CELL_ATTR, 'true')
+    toggle.style.display = 'none'
+    const dash = document.createElement('span')
+    dash.setAttribute(AGENT_DASH_ATTR, 'true')
+    dash.setAttribute('aria-hidden', 'true')
+    dash.className = 'w-9 text-center'
+    dash.style.cssText = 'color:var(--ui-text-quaternary);'
+    dash.textContent = '—'
+    toggle.before(dash)
+  }
+
+  const restoreAgentToggle = () => {
+    document.querySelectorAll(`[${AGENT_DASH_ATTR}]`).forEach(node => node.remove())
+    document.querySelectorAll(`[${AGENT_CELL_ATTR}]`).forEach(cell => {
+      cell.querySelectorAll('button[role="switch"]').forEach(toggle => {
+        toggle.style.display = ''
+      })
+      cell.removeAttribute(AGENT_CELL_ATTR)
+    })
+  }
+
+  const clearEscape = () => {    if (escapeListener) {
       window.removeEventListener('keydown', escapeListener)
       escapeListener = null
     }
@@ -160,6 +221,7 @@ function installModelSettings(ctx) {
     button?.removeEventListener('click', open)
     mount?.remove()
     restoreFolderSlot()
+    restoreAgentToggle()
     row = null
     badges = null
     mount = null
@@ -374,8 +436,10 @@ function installModelSettings(ctx) {
         button.addEventListener('click', open)
         mount.append(button)
         nextBadges.append(mount)
+        hideAgentToggle(nextRow)
       } else {
         removeFolderSlot(nextCell)
+        hideAgentToggle(nextRow)
       }
     } finally {
       syncing = false
