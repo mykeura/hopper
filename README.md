@@ -20,7 +20,7 @@ servers. It is currently free with limited usage.
 
 ## Demo
 
-![Hopper model settings demo](demo/demo-2.gif)
+![Hopper model settings demo](demo/demo.gif)
 
 ## Manage models in Hermes
 
