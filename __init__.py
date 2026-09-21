@@ -104,39 +104,7 @@ class HopperProfile(OpenRouterProfile):
         base_url: str | None = None,
         timeout: float = 8.0,
     ) -> list[str] | None:
-        if not _hopper_agent_enabled():
-            return []
         return _read_models()
-
-
-def _hopper_agent_enabled() -> bool:
-    """Whether the Agent-half switch covers Hopper.
-
-    Provider discovery loads model-providers unconditionally, so without this
-    gate the Agent toggle in Capabilities would be decorative: flipping it
-    off would leave every Hopper model in the picker. An empty list hides
-    them, giving the switch a real function. Missing/unreadable config fails
-    open to preserve the pre-gate behavior.
-    """
-    try:
-        try:
-            from hermes_cli.plugins_discovery import (
-                _get_disabled_plugins,
-                _get_enabled_plugins,
-            )
-        except ImportError:
-            from hermes_cli.plugins import (
-                _get_disabled_plugins,
-                _get_enabled_plugins,
-            )
-        if "hopper" in _get_disabled_plugins():
-            return False
-        enabled = _get_enabled_plugins()
-        if enabled is None:
-            return True
-        return "hopper" in enabled
-    except Exception:
-        return True
 
 
 hopper = HopperProfile(
