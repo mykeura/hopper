@@ -8,13 +8,15 @@ Hopper gives you a small, personal OpenRouter catalog that you can edit from Her
 
 ## Default models
 
-Hopper v1.3.0 starts with these models:
+Hopper v1.3.0 starts with this model:
 
 ```text
 inclusionai/ling-3.0-flash-vl:free
-inclusionai/ling-3.0-flash-fin:free
-inclusionai/ling-3.0-flash-sante:free
 ```
+
+Ling 3.0 Flash VL is the recommended starting point for now: a multimodal
+model that does not collect data, served via OpenRouter from NovitaAI
+servers. It is currently free with limited usage.
 
 ## Demo
 
@@ -25,7 +27,7 @@ inclusionai/ling-3.0-flash-sante:free
 1. Open **Capabilities → Plugins** and select **Hopper**.
 2. Click **Settings** to open the OpenRouter model list.
 3. Add or remove one OpenRouter model ID per line, then click **Save models**.
-4. To return to the bundled list, click **Reset Ling defaults**.
+4. To return to the bundled default, click **Reset defaults**.
 
 Close the settings window with its close button, press **Escape**, or click the backdrop. After saving, reopen the Hermes model picker so the updated catalog appears in the selector.
 

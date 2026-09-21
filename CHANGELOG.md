@@ -13,8 +13,10 @@ plugin manifest.
   with `hermes plugins install`, as required by the Hermes plugin catalog.
   Install by copying this directory to `~/.hermes/plugins/hopper`; the
   `install.sh` split-installer was removed.
-- No functional or visual changes: same Settings modal, same validation,
-  same Ling defaults, same `manage.py` CLI (now at `plugins/hopper/`).
+- No visual changes except a generic **Reset defaults** button (was
+  **Reset Ling defaults**); the bundled default list is now just
+  `inclusionai/ling-3.0-flash-vl:free`. Same validation, same `manage.py`
+  CLI (now at `plugins/hopper/`).
 
 ## [1.2.0] - 2026-09-20
 

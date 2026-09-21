@@ -7,9 +7,7 @@ const DESCRIPTION =
   'Hopper by @mykeura - Add and manage custom OpenRouter models in Hermes without modifying the core catalog.'
 
 const DEFAULT_MODELS = [
-  'inclusionai/ling-3.0-flash-vl:free',
-  'inclusionai/ling-3.0-flash-fin:free',
-  'inclusionai/ling-3.0-flash-sante:free'
+  'inclusionai/ling-3.0-flash-vl:free'
 ]
 
 const DEFAULT_TEXT = DEFAULT_MODELS.join('\n')
@@ -298,7 +296,7 @@ function installModelSettings(ctx) {
     const save = makeElement('button', '', 'Save models')
     save.type = 'button'
     save.style.cssText = 'cursor:pointer;border:1px solid var(--ui-stroke-secondary);border-radius:6px;background:transparent;color:var(--ui-text-primary);padding:5px 10px;font-size:12px;'
-    const reset = makeElement('button', '', 'Reset Ling defaults')
+    const reset = makeElement('button', '', 'Reset defaults')
     reset.type = 'button'
     reset.style.cssText = 'cursor:pointer;border:0;border-radius:6px;background:transparent;color:var(--ui-text-tertiary);padding:5px 10px;font-size:12px;'
     actions.append(save, reset)

@@ -41,8 +41,6 @@ DESCRIPTION = (
 
 DEFAULT_MODELS: tuple[str, ...] = (
     "inclusionai/ling-3.0-flash-vl:free",
-    "inclusionai/ling-3.0-flash-fin:free",
-    "inclusionai/ling-3.0-flash-sante:free",
 )
 
 
