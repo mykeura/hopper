@@ -31,6 +31,10 @@ servers. It is currently free with limited usage.
 
 Close the settings window with its close button, press **Escape**, or click the backdrop. After saving, reopen the Hermes model picker so the updated catalog appears in the selector.
 
+> **Note:** after removing a model, restart Hermes Desktop and press
+> **Refresh models** in the model selector. Otherwise removed models keep
+> appearing until that refresh.
+
 ## Install or upgrade
 
 Copy this directory to `~/.hermes/plugins/hopper` (or install it with
