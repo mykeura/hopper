@@ -5,6 +5,25 @@ the corresponding Git commit dates. There are no release tags in this
 repository, so version headings are based on the versions recorded in the
 plugin manifest.
 
+## [1.4.0] - 2026-09-21
+
+### Removed
+
+- Removed the Desktop half (`desktop/plugin.js`). It decorated the
+  Capabilities hub row through direct DOM mutation (row selectors, folder-icon
+  removal, Agent-toggle hiding, badge injection, and a `document.body` modal),
+  which is outside the plugin SDK contract. Models are now managed with the
+  `manage.py` CLI or by editing `plugin-data/hopper/models.txt` directly.
+- Removed the Desktop settings demo (`demo/demo.gif`) and its README section;
+  the README now documents model management from the terminal on Linux,
+  macOS, and Windows.
+
+### Changed
+
+- Dropped the `Hopper by @mykeura - ` prefix from the plugin description in
+  the manifest and provider profile; attribution lives in the `maintainer`
+  field (renamed from `author`).
+
 ## [1.3.0] - 2026-09-21
 
 ### Changed
