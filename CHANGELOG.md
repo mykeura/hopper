@@ -16,7 +16,8 @@ plugin manifest.
   `manage.py` CLI or by editing `plugin-data/hopper/models.txt` directly.
 - Removed the Desktop settings demo (`demo/demo.gif`) and its README section;
   the README now documents model management from the terminal on Linux,
-  macOS, and Windows.
+  macOS, and Windows, and clarifies that model IDs are OpenRouter IDs
+  (`provider/model-name`, optional `:free`) copied from openrouter.ai/models.
 
 ### Changed
 

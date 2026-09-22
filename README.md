@@ -20,6 +20,12 @@ servers. It is currently free with limited usage.
 
 ## Manage models
 
+Hopper only works with **OpenRouter**: model IDs must be the ones listed on
+[openrouter.ai/models](https://openrouter.ai/models), in the form
+`provider/model-name` (optionally with OpenRouter's `:free` suffix for free
+variants — e.g. `inclusionai/ling-3.0-flash-vl:free`). Traffic and billing go
+through your normal `OPENROUTER_API_KEY`.
+
 Hopper stores its catalog in a single text file under your Hermes home
 directory:
 
@@ -35,6 +41,9 @@ of the defaults above. You can also point Hopper at a specific catalog with
 ### With the CLI (recommended)
 
 The bundled helper lives at `<hermes home>/plugins/hopper/manage.py`.
+Replace `provider/model-id` with an ID copied from
+[openrouter.ai/models](https://openrouter.ai/models), such as
+`inclusionai/ling-3.0-flash-vl:free`.
 
 **Linux / macOS:**
 
@@ -84,8 +93,11 @@ installed.
 Open the models file from the table above (or run the `file` command to print
 its exact location) in any text editor:
 
-- One OpenRouter model ID per line (`provider/model-id` or
-  `provider/model-id:free`).
+- One **OpenRouter** model ID per line, copied from
+  [openrouter.ai/models](https://openrouter.ai/models):
+  - `provider/model-name` — e.g. `x-ai/grok-4.7` or `xiaomi/mimo-v2.6-pro`
+  - `provider/model-name:free` — free variant, e.g.
+    `inclusionai/ling-3.0-flash-vl:free`
 - Blank lines are ignored.
 - Lines starting with `#` are comments.
 - Duplicate IDs are saved once.
@@ -95,8 +107,6 @@ Save the file, then reopen the Hermes model picker (or press **Refresh
 models** in the selector) so the updated catalog appears. After removing a
 model, restart Hermes Desktop as well; otherwise removed models keep
 appearing until that refresh.
-
-Hopper uses your normal `OPENROUTER_API_KEY`.
 
 ## Install or upgrade
 
