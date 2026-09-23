@@ -8,22 +8,32 @@ Hopper gives you a small, personal OpenRouter catalog that you can edit from the
 
 ## Default models
 
-Hopper v1.4.0 starts with this model:
+The currently bundled default model is:
 
 ```text
-inclusionai/ling-3.0-flash-vl:free
+qwen/qwen3.8-27b:free
 ```
 
-Ling 3.0 Flash VL is the recommended starting point for now: a multimodal
-model that does not collect data, served via OpenRouter from NovitaAI
-servers. It is currently free with limited usage.
+As of September 23, 2026, OpenRouter's [model page](https://openrouter.ai/qwen/qwen3.8-27b:free)
+lists exactly one endpoint for this free model, served by ModelRun [by
+Modular] at zero prompt and completion prices. It accepts text, image, and
+video input. OpenRouter's [provider table](https://openrouter.ai/providers)
+currently marks ModelRun **No** for training and **Zero retention**. These
+are time-sensitive listings, not permanent guarantees: endpoint availability,
+provider routing, and provider practices can change. The Zero retention label
+covers provider-side prompt/response retention, not all data handling;
+OpenRouter may retain request metadata such as token counts, latency, model,
+and cost. Check the live [model endpoint](https://openrouter.ai/qwen/qwen3.8-27b:free),
+[provider table](https://openrouter.ai/providers), and
+[ZDR explanation](https://openrouter.ai/blog/insights/zero-data-retention/)
+before use.
 
 ## Manage models
 
 Hopper only works with **OpenRouter**: model IDs must be the ones listed on
 [openrouter.ai/models](https://openrouter.ai/models), in the form
 `provider/model-name` (optionally with OpenRouter's `:free` suffix for free
-variants — e.g. `inclusionai/ling-3.0-flash-vl:free`). Traffic and billing go
+variants — e.g. `qwen/qwen3.8-27b:free`). Traffic and billing go
 through your normal `OPENROUTER_API_KEY`.
 
 Hopper stores its catalog in a single text file under your Hermes home
@@ -43,7 +53,7 @@ of the defaults above. You can also point Hopper at a specific catalog with
 The bundled helper lives at `<hermes home>/plugins/hopper/manage.py`.
 Replace `provider/model-id` with an ID copied from
 [openrouter.ai/models](https://openrouter.ai/models), such as
-`inclusionai/ling-3.0-flash-vl:free`.
+`qwen/qwen3.8-27b:free`.
 
 **Linux / macOS:**
 
@@ -97,7 +107,7 @@ its exact location) in any text editor:
   [openrouter.ai/models](https://openrouter.ai/models):
   - `provider/model-name` — e.g. `x-ai/grok-4.7` or `xiaomi/mimo-v2.6-pro`
   - `provider/model-name:free` — free variant, e.g.
-    `inclusionai/ling-3.0-flash-vl:free`
+    `qwen/qwen3.8-27b:free`
 - Blank lines are ignored.
 - Lines starting with `#` are comments.
 - Duplicate IDs are saved once.

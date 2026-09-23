@@ -5,6 +5,14 @@ the corresponding Git commit dates. There are no release tags in this
 repository, so version headings are based on the versions recorded in the
 plugin manifest.
 
+## [Unreleased]
+
+### Changed
+
+- Replaced the bundled default model with `qwen/qwen3.8-27b:free` in the
+  provider fallback and reset command; updated README examples and its dated
+  notes on endpoint availability, provider routing, and data handling.
+
 ## [1.4.0] - 2026-09-21
 
 ### Removed

@@ -16,7 +16,7 @@ import tempfile
 
 
 DEFAULT_MODELS = [
-    "inclusionai/ling-3.0-flash-vl:free",
+    "qwen/qwen3.8-27b:free",
 ]
 
 
