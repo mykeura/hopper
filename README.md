@@ -11,29 +11,28 @@ Hopper gives you a small, personal OpenRouter catalog that you can edit from the
 The currently bundled default model is:
 
 ```text
-qwen/qwen3.8-27b:free
+inclusionai/ling-3.1-flash
 ```
 
-As of September 23, 2026, OpenRouter's [model page](https://openrouter.ai/qwen/qwen3.8-27b:free)
-lists exactly one endpoint for this free model, served by ModelRun [by
-Modular] at zero prompt and completion prices. It accepts text, image, and
-video input. OpenRouter's [provider table](https://openrouter.ai/providers)
-currently marks ModelRun **No** for training and **Zero retention**. These
-are time-sensitive listings, not permanent guarantees: endpoint availability,
-provider routing, and provider practices can change. The Zero retention label
-covers provider-side prompt/response retention, not all data handling;
-OpenRouter may retain request metadata such as token counts, latency, model,
-and cost. Check the live [model endpoint](https://openrouter.ai/qwen/qwen3.8-27b:free),
-[provider table](https://openrouter.ai/providers), and
-[ZDR explanation](https://openrouter.ai/blog/insights/zero-data-retention/)
-before use.
+OpenRouter's [model page](https://openrouter.ai/inclusionai/ling-3.1-flash)
+lists Ling 3.1 Flash, a hybrid reasoning mixture-of-experts model from
+InclusionAI (25B active parameters out of 560B total), with a 262K-token
+context window and a 32K-token output cap. It is currently listed as free
+(zero prompt and completion prices) and is hosted by a single provider
+(NovitaAI), so OpenRouter forwards requests to it directly without routing.
+These are time-sensitive listings, not permanent guarantees: endpoint
+availability, provider routing, pricing, and provider practices can change,
+and the zero-price listing reflects a launch-time free trial that OpenRouter
+and InclusionAI may end. Check the live [model
+page](https://openrouter.ai/inclusionai/ling-3.1-flash) and [provider
+table](https://openrouter.ai/providers) before use.
 
 ## Manage models
 
 Hopper only works with **OpenRouter**: model IDs must be the ones listed on
 [openrouter.ai/models](https://openrouter.ai/models), in the form
 `provider/model-name` (optionally with OpenRouter's `:free` suffix for free
-variants — e.g. `qwen/qwen3.8-27b:free`). Traffic and billing go
+variants — e.g. `inclusionai/ling-3.0-flash-vl:free`). Traffic and billing go
 through your normal `OPENROUTER_API_KEY`.
 
 Hopper stores its catalog in a single text file under your Hermes home
@@ -53,7 +52,7 @@ of the defaults above. You can also point Hopper at a specific catalog with
 The bundled helper lives at `<hermes home>/plugins/hopper/manage.py`.
 Replace `provider/model-id` with an ID copied from
 [openrouter.ai/models](https://openrouter.ai/models), such as
-`qwen/qwen3.8-27b:free`.
+`inclusionai/ling-3.1-flash`.
 
 **Linux / macOS:**
 
@@ -105,18 +104,25 @@ its exact location) in any text editor:
 
 - One **OpenRouter** model ID per line, copied from
   [openrouter.ai/models](https://openrouter.ai/models):
-  - `provider/model-name` — e.g. `x-ai/grok-4.7` or `xiaomi/mimo-v2.6-pro`
+  - `provider/model-name` — e.g. `z-ai/glm-5.3` or `deepseek/deepseek-v4.1-flash`
   - `provider/model-name:free` — free variant, e.g.
-    `qwen/qwen3.8-27b:free`
+    `inclusionai/ling-3.0-flash-vl:free`
 - Blank lines are ignored.
 - Lines starting with `#` are comments.
 - Duplicate IDs are saved once.
 - An empty catalog is valid: it hides every Hopper model.
 
-Save the file, then reopen the Hermes model picker (or press **Refresh
-models** in the selector) so the updated catalog appears. After removing a
-model, restart Hermes Desktop as well; otherwise removed models keep
-appearing until that refresh.
+Save the file, then open the model picker or press **Refresh models** in
+the selector so the updated catalog appears.
+
+The `list`/`add`/`remove`/`reset`/`file` commands in this plugin update
+`models.txt` **and** invalidate Hermes' cached model list, so CLI edits
+take effect on the next model-picker read without restarting the app.
+Editing `models.txt` by hand is treated as an external change: open the
+model picker (or **Refresh models**) so it re-fetches. If a removed model
+still shows up after a refresh, the stale entry lives in
+`~/.hermes/provider_models_cache.json` under the `hopper` key — delete that
+key (or run any of the CLI commands above) and refresh again.
 
 ## Install or upgrade
 

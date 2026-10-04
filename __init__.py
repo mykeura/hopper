@@ -40,7 +40,7 @@ DESCRIPTION = (
 )
 
 DEFAULT_MODELS: tuple[str, ...] = (
-    "qwen/qwen3.8-27b:free",
+    "inclusionai/ling-3.1-flash",
 )
 
 

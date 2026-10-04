@@ -9,15 +9,76 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+import json
 import os
 from pathlib import Path
 import sys
 import tempfile
+import time
 
 
 DEFAULT_MODELS = [
-    "qwen/qwen3.8-27b:free",
+    "inclusionai/ling-3.1-flash",
 ]
+
+# Slug del provider que Hermes usa como clave en $HERMES_HOME/provider_models_cache.json.
+# Hopper expone su catálogo a través de `fetch_models()`; el host lo cachea por un fingerprint
+# que NO incluye el mtime de models.txt, así que al mutar el catálogo hay que invalidar esa
+# entrada para que la siguiente lectura del selector re-fetchee el catálogo real.
+_PROVIDER_CACHE_KEY = "hopper"
+
+
+def _invalidate_host_cache() -> None:
+    """Drop the host's cached Hopper model list so the next model-picker read re-fetches
+    models.txt instead of serving the now-stale catalog from provider_models_cache.json.
+
+    Prefers the host's own API (``clear_provider_models_cache``) when importable — that also
+    clears any in-process memo. Falls back to removing the JSON key with stdlib only, which
+    matters when this CLI is run with the user's python rather than Hermes' venv (the common
+    case). Best-effort: a failure here must never mask a catalog mutation that already landed
+    on disk.
+    """
+    try:
+        from hermes_cli.models import clear_provider_models_cache
+    except Exception:
+        clear_provider_models_cache = None
+    if clear_provider_models_cache is not None:
+        try:
+            clear_provider_models_cache(_PROVIDER_CACHE_KEY)
+            return
+        except Exception:
+            pass
+
+    path = hermes_home() / "provider_models_cache.json"
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    if not isinstance(raw, dict) or _PROVIDER_CACHE_KEY not in raw:
+        return
+    del raw[_PROVIDER_CACHE_KEY]
+    try:
+        fd, tmp_name = tempfile.mkstemp(
+            prefix="provider_models_cache.", dir=str(path.parent), text=True
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                json.dump(raw, handle, indent=None, ensure_ascii=False)
+            # Igual que el host, clamp el mtime a la resolución de segundos: el fingerprint
+            # incluye auth.json@mtime_ns y una resincronización de reloj puede generar
+            # partición del cache.
+            try:
+                st = os.stat(tmp_name)
+                ts = int(st.st_mtime)
+                os.utime(tmp_name, ns=(ts * 10**9, ts * 10**9))
+            except OSError:
+                pass
+            os.replace(tmp_name, path)
+        finally:
+            if os.path.exists(tmp_name):
+                os.unlink(tmp_name)
+    except Exception:
+        pass
 
 
 def hermes_home() -> Path:
@@ -146,6 +207,7 @@ def cmd_replace_b64(args: argparse.Namespace) -> int:
             models.append(value)
 
     write_models(models)
+    _invalidate_host_cache()
     print(f"Saved {len(models)} model(s).")
     return 0
 
@@ -159,6 +221,7 @@ def cmd_add(args: argparse.Namespace) -> int:
             current.append(model)
             added += 1
     write_models(current)
+    _invalidate_host_cache()
     print(f"Added {added} model(s).")
     print(f"Hopper catalog: {models_file()}")
     return 0
@@ -170,12 +233,14 @@ def cmd_remove(args: argparse.Namespace) -> int:
     new = [model for model in current if model not in targets]
     removed = len(current) - len(new)
     write_models(new)
+    _invalidate_host_cache()
     print(f"Removed {removed} model(s).")
     return 0
 
 
 def cmd_reset(_: argparse.Namespace) -> int:
     write_models(DEFAULT_MODELS)
+    _invalidate_host_cache()
     print("Restored Hopper's default model.")
     print(f"Hopper catalog: {models_file()}")
     return 0
