@@ -14,11 +14,10 @@ import os
 from pathlib import Path
 import sys
 import tempfile
-import time
 
 
 DEFAULT_MODELS = [
-    "inclusionai/ling-3.1-flash",
+    "inclusionai/ling-3.0-flash-vl",
 ]
 
 # Slug del provider que Hermes usa como clave en $HERMES_HOME/provider_models_cache.json.
@@ -64,15 +63,6 @@ def _invalidate_host_cache() -> None:
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as handle:
                 json.dump(raw, handle, indent=None, ensure_ascii=False)
-            # Igual que el host, clamp el mtime a la resolución de segundos: el fingerprint
-            # incluye auth.json@mtime_ns y una resincronización de reloj puede generar
-            # partición del cache.
-            try:
-                st = os.stat(tmp_name)
-                ts = int(st.st_mtime)
-                os.utime(tmp_name, ns=(ts * 10**9, ts * 10**9))
-            except OSError:
-                pass
             os.replace(tmp_name, path)
         finally:
             if os.path.exists(tmp_name):
@@ -83,7 +73,16 @@ def _invalidate_host_cache() -> None:
 
 def hermes_home() -> Path:
     configured = os.environ.get("HERMES_HOME")
-    return Path(configured).expanduser() if configured else Path.home() / ".hermes"
+    if configured:
+        return Path(configured).expanduser()
+    # Mirror Hermes' platform default (hermes_constants._get_platform_default_hermes_home):
+    # %LOCALAPPDATA%\hermes on Windows, ~/.hermes elsewhere.
+    suffix = os.environ.get("HERMES_DATA_DIR_SUFFIX", "")
+    if sys.platform == "win32":
+        local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
+        base = Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
+        return base / ("hermes" + suffix)
+    return Path.home() / (".hermes" + suffix)
 
 
 def models_file() -> Path:
@@ -171,8 +170,8 @@ def cmd_list(_: argparse.Namespace) -> int:
 def cmd_dump(_: argparse.Namespace) -> int:
     """Print only model IDs; empty catalogs produce no output.
 
-    This is intended for Hopper's Desktop half so it can read the catalog
-    without interpreting human-friendly CLI status text.
+    Machine-readable variant of ``list`` kept for any caller that parses the
+    catalog without interpreting human-friendly CLI status text.
     """
     for model in read_models():
         print(model)
@@ -182,9 +181,9 @@ def cmd_dump(_: argparse.Namespace) -> int:
 def cmd_replace_b64(args: argparse.Namespace) -> int:
     """Replace the catalog from a base64-encoded UTF-8 payload.
 
-    The Desktop plugin calls this helper as an executable file. Keeping user
-    data in one opaque argument avoids shell quoting/injection problems and,
-    importantly, avoids interpreter -c/-e flags that Hermes blocks by design.
+    Keeping user data in one opaque argument avoids shell quoting/injection
+    problems and, importantly, avoids interpreter -c/-e flags that Hermes
+    blocks by design when this helper is invoked as an executable file.
     """
     try:
         raw = base64.b64decode(args.payload.encode("ascii"), validate=True)

@@ -1,17 +1,54 @@
 # Changelog
 
 All notable user-facing changes to Hopper are documented here. Dates follow
-the corresponding Git commit dates. There are no release tags in this
-repository, so version headings are based on the versions recorded in the
-plugin manifest.
+the corresponding Git commit dates. Version headings match the versions
+recorded in the plugin manifest and the matching `v*` git tags.
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-10-06
+
 ### Changed
 
-- Replaced the bundled default model with `qwen/qwen3.8-27b:free` in the
-  provider fallback and reset command; updated README examples and its dated
-  notes on endpoint availability, provider routing, and data handling.
+- Replaced the bundled default model with `inclusionai/ling-3.0-flash-vl`, the
+  paid Ling 3.0 Flash VL variant (5.5B active / 124B total MoE, 262K context,
+  native vision and tool calling, roughly $0.02 / $0.06 per 1M tokens). A paid
+  default does not depend on launch-time free trials expiring out of the
+  catalog; README examples and the default-model notes were updated.
+
+### Fixed
+
+- The bundled default model is now removable: `fallback_models` is empty so
+  Hermes no longer merges it back into the picker list (curated-first) after
+  `remove` or an emptied `models.txt`. An empty catalog now truly hides every
+  Hopper model, as documented.
+- `manage.py` and the provider now resolve the real Windows Hermes home
+  (`%LOCALAPPDATA%\hermes`, matching Hermes' platform default) instead of
+  `~/.hermes`, so CLI edits and cache invalidation land where Hermes reads
+  them on Windows.
+- README corrections: only `add`/`remove`/`reset` invalidate the model cache
+  (`list`/`file` are read-only), and the Windows paths now point at
+  `%LOCALAPPDATA%\hermes`.
+
+### Removed
+
+- Dropped the dead mtime-clamp in the cache-invalidation fallback: the host
+  fingerprint hashes credential-file mtimes, never the cache file's own.
+
+## [1.5.0] - 2026-10-03
+
+### Added
+
+- `manage.py` mutations (`add`/`remove`/`reset`/`replace-b64`) now invalidate
+  the `hopper` entry in `$HERMES_HOME/provider_models_cache.json`, preferring
+  the host's `clear_provider_models_cache` API and falling back to an atomic
+  JSON rewrite, so CLI edits take effect without restarting Hermes.
+
+### Changed
+
+- Replaced the bundled default model with `inclusionai/ling-3.1-flash`;
+  updated README examples and its dated notes on endpoint availability,
+  provider routing, and data handling.
 
 ## [1.4.0] - 2026-09-21
 

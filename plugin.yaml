@@ -3,7 +3,7 @@
 
 name: hopper
 kind: model-provider
-version: 1.4.0
+version: 1.6.0
 description: Add and manage custom OpenRouter models in Hermes without modifying the core catalog.
 maintainer: Miguel Euraque
 license: MIT

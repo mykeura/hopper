@@ -11,20 +11,20 @@ Hopper gives you a small, personal OpenRouter catalog that you can edit from the
 The currently bundled default model is:
 
 ```text
-inclusionai/ling-3.1-flash
+inclusionai/ling-3.0-flash-vl
 ```
 
-OpenRouter's [model page](https://openrouter.ai/inclusionai/ling-3.1-flash)
-lists Ling 3.1 Flash, a hybrid reasoning mixture-of-experts model from
-InclusionAI (25B active parameters out of 560B total), with a 262K-token
-context window and a 32K-token output cap. It is currently listed as free
-(zero prompt and completion prices) and is hosted by a single provider
-(NovitaAI), so OpenRouter forwards requests to it directly without routing.
-These are time-sensitive listings, not permanent guarantees: endpoint
-availability, provider routing, pricing, and provider practices can change,
-and the zero-price listing reflects a launch-time free trial that OpenRouter
-and InclusionAI may end. Check the live [model
-page](https://openrouter.ai/inclusionai/ling-3.1-flash) and [provider
+OpenRouter's [model page](https://openrouter.ai/inclusionai/ling-3.0-flash-vl)
+lists Ling 3.0 Flash VL, a small vision-language mixture-of-experts model
+from InclusionAI (5.5B active parameters out of 124B total), with a
+262K-token context window and native tool calling. It is a **paid** model —
+chosen over a free variant on purpose, so the bundled default does not
+depend on launch-time free trials that expire and silently leave the
+catalog. At roughly $0.02 / $0.06 per 1M input/output tokens it is cheap
+enough to keep as a permanent default. These are time-sensitive listings,
+not permanent guarantees: endpoint availability, provider routing, pricing,
+and provider practices can change. Check the live [model
+page](https://openrouter.ai/inclusionai/ling-3.0-flash-vl) and [provider
 table](https://openrouter.ai/providers) before use.
 
 ## Manage models
@@ -32,7 +32,7 @@ table](https://openrouter.ai/providers) before use.
 Hopper only works with **OpenRouter**: model IDs must be the ones listed on
 [openrouter.ai/models](https://openrouter.ai/models), in the form
 `provider/model-name` (optionally with OpenRouter's `:free` suffix for free
-variants — e.g. `inclusionai/ling-3.0-flash-vl:free`). Traffic and billing go
+variants — e.g. `qwen/qwen3.8-27b:free`). Traffic and billing go
 through your normal `OPENROUTER_API_KEY`.
 
 Hopper stores its catalog in a single text file under your Hermes home
@@ -41,7 +41,7 @@ directory:
 | OS | Hermes home | Models file |
 |----|-------------|-------------|
 | Linux / macOS | `~/.hermes` | `~/.hermes/plugin-data/hopper/models.txt` |
-| Windows | `%USERPROFILE%\.hermes` | `%USERPROFILE%\.hermes\plugin-data\hopper\models.txt` |
+| Windows | `%LOCALAPPDATA%\hermes` | `%LOCALAPPDATA%\hermes\plugin-data\hopper\models.txt` |
 
 If you set the `HERMES_HOME` environment variable, that path is used instead
 of the defaults above. You can also point Hopper at a specific catalog with
@@ -52,7 +52,7 @@ of the defaults above. You can also point Hopper at a specific catalog with
 The bundled helper lives at `<hermes home>/plugins/hopper/manage.py`.
 Replace `provider/model-id` with an ID copied from
 [openrouter.ai/models](https://openrouter.ai/models), such as
-`inclusionai/ling-3.1-flash`.
+`inclusionai/ling-3.0-flash-vl`.
 
 **Linux / macOS:**
 
@@ -67,21 +67,21 @@ python3 ~/.hermes/plugins/hopper/manage.py file
 **Windows (PowerShell):**
 
 ```powershell
-py "$env:USERPROFILE\.hermes\plugins\hopper\manage.py" list
-py "$env:USERPROFILE\.hermes\plugins\hopper\manage.py" add "provider/model-id"
-py "$env:USERPROFILE\.hermes\plugins\hopper\manage.py" remove "provider/model-id"
-py "$env:USERPROFILE\.hermes\plugins\hopper\manage.py" reset
-py "$env:USERPROFILE\.hermes\plugins\hopper\manage.py" file
+py "$env:LOCALAPPDATA\hermes\plugins\hopper\manage.py" list
+py "$env:LOCALAPPDATA\hermes\plugins\hopper\manage.py" add "provider/model-id"
+py "$env:LOCALAPPDATA\hermes\plugins\hopper\manage.py" remove "provider/model-id"
+py "$env:LOCALAPPDATA\hermes\plugins\hopper\manage.py" reset
+py "$env:LOCALAPPDATA\hermes\plugins\hopper\manage.py" file
 ```
 
 **Windows (CMD):**
 
 ```bat
-py "%USERPROFILE%\.hermes\plugins\hopper\manage.py" list
-py "%USERPROFILE%\.hermes\plugins\hopper\manage.py" add "provider/model-id"
-py "%USERPROFILE%\.hermes\plugins\hopper\manage.py" remove "provider/model-id"
-py "%USERPROFILE%\.hermes\plugins\hopper\manage.py" reset
-py "%USERPROFILE%\.hermes\plugins\hopper\manage.py" file
+py "%LOCALAPPDATA%\hermes\plugins\hopper\manage.py" list
+py "%LOCALAPPDATA%\hermes\plugins\hopper\manage.py" add "provider/model-id"
+py "%LOCALAPPDATA%\hermes\plugins\hopper\manage.py" remove "provider/model-id"
+py "%LOCALAPPDATA%\hermes\plugins\hopper\manage.py" reset
+py "%LOCALAPPDATA%\hermes\plugins\hopper\manage.py" file
 ```
 
 Commands:

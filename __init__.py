@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+import sys
 
 from providers import register_provider
 
@@ -40,13 +41,22 @@ DESCRIPTION = (
 )
 
 DEFAULT_MODELS: tuple[str, ...] = (
-    "inclusionai/ling-3.1-flash",
+    "inclusionai/ling-3.0-flash-vl",
 )
 
 
 def _hermes_home() -> Path:
     configured = os.environ.get("HERMES_HOME")
-    return Path(configured).expanduser() if configured else Path.home() / ".hermes"
+    if configured:
+        return Path(configured).expanduser()
+    # Mirror Hermes' platform default (hermes_constants._get_platform_default_hermes_home):
+    # %LOCALAPPDATA%\hermes on Windows, ~/.hermes elsewhere.
+    suffix = os.environ.get("HERMES_DATA_DIR_SUFFIX", "")
+    if sys.platform == "win32":
+        local_appdata = os.environ.get("LOCALAPPDATA", "").strip()
+        base = Path(local_appdata) if local_appdata else Path.home() / "AppData" / "Local"
+        return base / ("hermes" + suffix)
+    return Path.home() / (".hermes" + suffix)
 
 
 def _models_file() -> Path:
@@ -114,7 +124,11 @@ hopper = HopperProfile(
     signup_url="https://openrouter.ai/keys",
     base_url="https://openrouter.ai/api/v1",
     models_url="https://openrouter.ai/api/v1/models",
-    fallback_models=DEFAULT_MODELS,
+    # Empty on purpose: the host merges fallback_models into the live catalog
+    # (curated-first), which would pin the bundled default into the picker even
+    # after the user removes it. models.txt alone is the catalog — an empty file
+    # hides every Hopper model.
+    fallback_models=(),
 )
 
 register_provider(hopper)
