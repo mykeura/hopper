@@ -31,8 +31,9 @@ table](https://openrouter.ai/providers) before use.
 
 Hopper only works with **OpenRouter**: model IDs must be the ones listed on
 [openrouter.ai/models](https://openrouter.ai/models), in the form
-`provider/model-name` (optionally with OpenRouter's `:free` suffix for free
-variants — e.g. `qwen/qwen3.8-27b:free`). Traffic and billing go
+`provider/model-name` (OpenRouter also lists free options — either
+`:free`-suffixed variants or free-rate-limited IDs like
+`deepseek/deepseek-v4.1-flash-1017`). Traffic and billing go
 through your normal `OPENROUTER_API_KEY`; if you point OpenRouter at a
 proxy or regional endpoint with `OPENROUTER_BASE_URL`, Hopper follows the
 same override.
@@ -106,9 +107,8 @@ its exact location) in any text editor:
 
 - One **OpenRouter** model ID per line, copied from
   [openrouter.ai/models](https://openrouter.ai/models):
-  - `provider/model-name` — e.g. `z-ai/glm-5.3` or `deepseek/deepseek-v4.1-flash`
-  - `provider/model-name:free` — free variant, e.g.
-    `inclusionai/ling-3.0-flash-vl:free`
+  - `provider/model-name` — e.g. `z-ai/glm-5.3-flash` or `moonshotai/kimi-k3.1-pro`
+  - `provider/model-name:free` — free variants
 - Blank lines are ignored.
 - Lines starting with `#` are comments (note: the `add`/`remove`/`reset`
   commands rewrite the file, so only the built-in header comments are kept).
@@ -118,14 +118,14 @@ its exact location) in any text editor:
 Save the file, then open the model picker or press **Refresh models** in
 the selector so the updated catalog appears.
 
-The `list`/`add`/`remove`/`reset`/`file` commands in this plugin update
-`models.txt` **and** invalidate Hermes' cached model list, so CLI edits
-take effect on the next model-picker read without restarting the app.
-Editing `models.txt` by hand is treated as an external change: open the
-model picker (or **Refresh models**) so it re-fetches. If a removed model
-still shows up after a refresh, the stale entry lives in
-`~/.hermes/provider_models_cache.json` under the `hopper` key — delete that
-key (or run any of the CLI commands above) and refresh again.
+The `add`/`remove`/`reset` commands update `models.txt` **and** invalidate
+Hermes' cached model list, so CLI edits take effect on the next
+model-picker read without restarting the app (`list`/`file` are
+read-only). Editing `models.txt` by hand is treated as an external change:
+open the model picker (or **Refresh models**) so it re-fetches. If a
+removed model still shows up after a refresh, the stale entry lives in
+`provider_models_cache.json` under your Hermes home, under the `hopper`
+key — delete that key (or run any of the commands above) and refresh again.
 
 ## Install or upgrade
 
