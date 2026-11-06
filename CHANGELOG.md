@@ -6,6 +6,43 @@ recorded in the plugin manifest and the matching `v*` git tags.
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-11-06
+
+### Fixed
+
+- Resolved the Hermes home through the host's `get_hermes_home()` instead of
+  reading `HERMES_HOME` from the environment directly: under the multiplex
+  gateway or the Desktop serve backend, non-launch profiles were reading
+  (and seeding) the launch profile's `models.txt`. `HERMES_HOME` and
+  `HOPPER_MODELS_FILE` also gained the host's `expandvars`/strip handling
+  (`HERMES_HOME=$VAR/...` now resolves like Hermes resolves it).
+- `models.txt` is now read as `utf-8-sig` and lines are validated the same
+  way `manage.py` validates them: a UTF-8 BOM or a hand-edited line without
+  `provider/model` shape no longer leaks into the picker as a phantom model
+  that 404s at inference.
+- The `manage.py` cache-invalidation fallback now edits
+  `provider_models_cache.json` under the same `provider_models_cache.json.lock`
+  the host takes, so a running Hermes can no longer resurrect the deleted
+  `hopper` cache row with a concurrent write.
+- `add` on a fresh install (no `models.txt` yet) now seeds the bundled
+  default model first, matching what the first Hermes run would create.
+- Hopper now honors `OPENROUTER_BASE_URL` (`base_url_env_var`), keeping
+  proxy/regional-endpoint setups in parity with the bundled OpenRouter
+  provider, and declares `aggregator`/`catalog_aliases` so the `hop` alias
+  normalizes to `hopper` in the model-catalog cache instead of leaving an
+  un-invalidated second cache row.
+- `manage.py` exits with a clean error (not a traceback) on filesystem
+  errors such as a `models.txt` locked by another program on Windows.
+
+### Changed
+
+- The manifest now uses the recognized `author` field (the `maintainer`
+  field was ignored by Hermes' manifest loader).
+- `models.txt`'s header now notes that the manage commands rewrite the file
+  and do not preserve custom comment lines.
+- README documents that `hermes plugins remove` (not `disable`) unloads the
+  provider, and that Hopper follows `OPENROUTER_BASE_URL`.
+
 ## [1.6.0] - 2026-10-06
 
 ### Changed

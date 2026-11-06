@@ -9,16 +9,25 @@ from __future__ import annotations
 import argparse
 import base64
 import binascii
+import contextlib
 import json
 import os
 from pathlib import Path
 import sys
 import tempfile
+import time
 
 
 DEFAULT_MODELS = [
     "inclusionai/ling-3.0-flash-vl",
 ]
+
+_HEADER = (
+    "# Hopper OpenRouter models — one model ID per line.\n"
+    "# Blank lines and lines beginning with # are ignored.\n"
+    "# The manage commands rewrite this file, so custom comment lines\n"
+    "# are not preserved.\n"
+)
 
 # Slug del provider que Hermes usa como clave en $HERMES_HOME/provider_models_cache.json.
 # Hopper expone su catálogo a través de `fetch_models()`; el host lo cachea por un fingerprint
@@ -34,8 +43,9 @@ def _invalidate_host_cache() -> None:
     Prefers the host's own API (``clear_provider_models_cache``) when importable — that also
     clears any in-process memo. Falls back to removing the JSON key with stdlib only, which
     matters when this CLI is run with the user's python rather than Hermes' venv (the common
-    case). Best-effort: a failure here must never mask a catalog mutation that already landed
-    on disk.
+    case). The fallback edits the JSON under the same ``<file>.lock`` the host takes so a running
+    Hermes cannot resurrect the deleted row mid-write. Best-effort: a failure here must never
+    mask a catalog mutation that already landed on disk.
     """
     try:
         from hermes_cli.models import clear_provider_models_cache
@@ -50,31 +60,109 @@ def _invalidate_host_cache() -> None:
 
     path = hermes_home() / "provider_models_cache.json"
     try:
-        raw = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return
-    if not isinstance(raw, dict) or _PROVIDER_CACHE_KEY not in raw:
-        return
-    del raw[_PROVIDER_CACHE_KEY]
-    try:
-        fd, tmp_name = tempfile.mkstemp(
-            prefix="provider_models_cache.", dir=str(path.parent), text=True
-        )
-        try:
-            with os.fdopen(fd, "w", encoding="utf-8") as handle:
-                json.dump(raw, handle, indent=None, ensure_ascii=False)
-            os.replace(tmp_name, path)
-        finally:
-            if os.path.exists(tmp_name):
-                os.unlink(tmp_name)
+        with _provider_cache_lock(path):
+            try:
+                raw = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                return
+            if not isinstance(raw, dict) or _PROVIDER_CACHE_KEY not in raw:
+                return
+            del raw[_PROVIDER_CACHE_KEY]
+            fd, tmp_name = tempfile.mkstemp(
+                prefix="provider_models_cache.", dir=str(path.parent), text=True
+            )
+            try:
+                with os.fdopen(fd, "w", encoding="utf-8") as handle:
+                    json.dump(raw, handle, indent=None, ensure_ascii=False)
+                os.replace(tmp_name, path)
+            finally:
+                if os.path.exists(tmp_name):
+                    os.unlink(tmp_name)
     except Exception:
         pass
 
 
+@contextlib.contextmanager
+def _provider_cache_lock(cache_path: Path):
+    """Best-effort replica of the host's ``provider_models_cache.json.lock``.
+
+    Every host writer serializes its read-modify-write of the cache on
+    ``<file>.lock`` (hermes_cli.models_cache_lock) so a locked writer cannot
+    resurrect a row deleted meanwhile. That module is only importable under
+    the Hermes venv — which takes the API path above — so this fallback takes
+    the same lock file with the same primitives (flock on POSIX, a 1-byte
+    msvcrt lock at offset 0 on Windows). Degrades to a no-op when locking is
+    unavailable: the edit stays best-effort.
+    """
+    lock_path = cache_path.with_name(cache_path.name + ".lock")
+    fd = None
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            # msvcrt.locking needs a non-empty file; losing the convenience
+            # write race is harmless — the winner already wrote content.
+            if not lock_path.exists() or lock_path.stat().st_size == 0:
+                try:
+                    lock_path.write_text(" ", encoding="utf-8")
+                except OSError:
+                    pass
+            fd = os.open(str(lock_path), os.O_RDWR)
+            # LK_LOCK retries internally for ~10s, then raises OSError —
+            # same bound as the POSIX loop below.
+            msvcrt.locking(fd, msvcrt.LK_LOCK, 1)
+        else:
+            import fcntl
+
+            fd = os.open(str(lock_path), os.O_RDWR | os.O_CREAT, 0o644)
+            # Non-blocking + retry with the host's 10s bound: a wedged
+            # holder must degrade to an unlocked edit, not a hung CLI.
+            deadline = time.monotonic() + 10.0
+            while True:
+                try:
+                    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError("provider models cache lock")
+                    time.sleep(0.05)
+    except Exception:
+        if fd is not None:
+            os.close(fd)
+            fd = None
+    try:
+        yield
+    finally:
+        if fd is not None:
+            try:
+                if sys.platform == "win32":
+                    import msvcrt
+
+                    os.lseek(fd, 0, os.SEEK_SET)
+                    msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+                else:
+                    import fcntl
+
+                    fcntl.flock(fd, fcntl.LOCK_UN)
+            except Exception:
+                pass
+            os.close(fd)
+
+
 def hermes_home() -> Path:
-    configured = os.environ.get("HERMES_HOME")
+    try:
+        # Same resolver as the provider: in this standalone process no
+        # profile ContextVar is bound, so this is env + platform default —
+        # but importing it keeps parity if Hermes ever changes the rules.
+        from hermes_constants import get_hermes_home
+
+        return get_hermes_home()
+    except ImportError:
+        pass
+    configured = os.environ.get("HERMES_HOME", "").strip()
     if configured:
-        return Path(configured).expanduser()
+        # Host parity (hermes_constants._expand_hermes_home): $VARS, then ~.
+        return Path(os.path.expandvars(configured)).expanduser()
     # Mirror Hermes' platform default (hermes_constants._get_platform_default_hermes_home):
     # %LOCALAPPDATA%\hermes on Windows, ~/.hermes elsewhere.
     suffix = os.environ.get("HERMES_DATA_DIR_SUFFIX", "")
@@ -86,9 +174,9 @@ def hermes_home() -> Path:
 
 
 def models_file() -> Path:
-    configured = os.environ.get("HOPPER_MODELS_FILE")
+    configured = os.environ.get("HOPPER_MODELS_FILE", "").strip()
     if configured:
-        return Path(configured).expanduser()
+        return Path(os.path.expandvars(configured)).expanduser()
     return hermes_home() / "plugin-data" / "hopper" / "models.txt"
 
 
@@ -114,8 +202,8 @@ def read_models() -> list[str]:
         return []
     out: list[str] = []
     seen: set[str] = set()
-    for raw in path.read_text(encoding="utf-8").splitlines():
-        item = raw.strip()
+    for raw in path.read_text(encoding="utf-8-sig").splitlines():
+        item = raw.strip().lstrip("\ufeff")
         if not item or item.startswith("#"):
             continue
         try:
@@ -140,12 +228,7 @@ def write_models(models: list[str]) -> None:
             seen.add(model)
             unique.append(model)
 
-    content = (
-        "# Hopper OpenRouter models — one model ID per line.\n"
-        "# Blank lines and lines beginning with # are ignored.\n"
-        + "\n".join(unique)
-        + ("\n" if unique else "")
-    )
+    content = _HEADER + "\n".join(unique) + ("\n" if unique else "")
 
     fd, tmp_name = tempfile.mkstemp(prefix="models.", dir=str(path.parent), text=True)
     try:
@@ -212,7 +295,9 @@ def cmd_replace_b64(args: argparse.Namespace) -> int:
 
 
 def cmd_add(args: argparse.Namespace) -> int:
-    current = read_models()
+    # A missing file means Hopper has never run: seed the defaults
+    # _ensure_models_file would have created so `add` extends them.
+    current = read_models() if models_file().exists() else list(DEFAULT_MODELS)
     added = 0
     for raw in args.models:
         model = validate_model_id(raw)
@@ -283,7 +368,7 @@ def main() -> int:
     args = parser.parse_args()
     try:
         return args.func(args)
-    except ValueError as exc:
+    except (ValueError, OSError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 

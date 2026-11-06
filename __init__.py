@@ -44,11 +44,30 @@ DEFAULT_MODELS: tuple[str, ...] = (
     "inclusionai/ling-3.0-flash-vl",
 )
 
+_MODELS_HEADER = (
+    "# Hopper OpenRouter models — one model ID per line.\n"
+    "# Blank lines and lines beginning with # are ignored.\n"
+    "# The manage commands rewrite this file, so custom comment lines\n"
+    "# are not preserved.\n"
+)
+
 
 def _hermes_home() -> Path:
-    configured = os.environ.get("HERMES_HOME")
+    try:
+        # Under the multiplex gateway / Desktop serve the active profile is
+        # bound through a ContextVar while os.environ["HERMES_HOME"] keeps the
+        # LAUNCH profile, so the env var must not win over the host resolver.
+        # get_hermes_home() covers the env var and platform default too; the
+        # mirror below only runs when hermes_constants is not importable.
+        from hermes_constants import get_hermes_home
+
+        return get_hermes_home()
+    except ImportError:
+        pass
+    configured = os.environ.get("HERMES_HOME", "").strip()
     if configured:
-        return Path(configured).expanduser()
+        # Host parity (hermes_constants._expand_hermes_home): $VARS, then ~.
+        return Path(os.path.expandvars(configured)).expanduser()
     # Mirror Hermes' platform default (hermes_constants._get_platform_default_hermes_home):
     # %LOCALAPPDATA%\hermes on Windows, ~/.hermes elsewhere.
     suffix = os.environ.get("HERMES_DATA_DIR_SUFFIX", "")
@@ -60,9 +79,9 @@ def _hermes_home() -> Path:
 
 
 def _models_file() -> Path:
-    configured = os.environ.get("HOPPER_MODELS_FILE")
+    configured = os.environ.get("HOPPER_MODELS_FILE", "").strip()
     if configured:
-        return Path(configured).expanduser()
+        return Path(os.path.expandvars(configured)).expanduser()
     return _hermes_home() / "plugin-data" / "hopper" / "models.txt"
 
 
@@ -70,14 +89,20 @@ def _ensure_models_file() -> Path:
     path = _models_file()
     path.parent.mkdir(parents=True, exist_ok=True)
     if not path.exists():
-        content = (
-            "# Hopper OpenRouter models — one model ID per line.\n"
-            "# Blank lines and lines beginning with # are ignored.\n"
-            + "\n".join(DEFAULT_MODELS)
-            + "\n"
-        )
+        content = _MODELS_HEADER + "\n".join(DEFAULT_MODELS) + "\n"
         path.write_text(content, encoding="utf-8")
     return path
+
+
+def _is_model_id(model: str) -> bool:
+    """Mirror manage.py's validate_model_id so the picker and the CLI agree
+    on what a catalog line is."""
+    return (
+        bool(model)
+        and not model.startswith("#")
+        and not any(ch.isspace() for ch in model)
+        and "/" in model
+    )
 
 
 def _read_models() -> list[str]:
@@ -86,13 +111,15 @@ def _read_models() -> list[str]:
     seen: set[str] = set()
 
     try:
-        lines = path.read_text(encoding="utf-8").splitlines()
+        # utf-8-sig: Notepad/PS5.1 save a BOM, which survives strip() and
+        # would otherwise leak \ufeff into the first model ID.
+        lines = path.read_text(encoding="utf-8-sig").splitlines()
     except OSError:
         return list(DEFAULT_MODELS)
 
     for raw in lines:
-        model = raw.strip()
-        if not model or model.startswith("#"):
+        model = raw.strip().lstrip("\ufeff")
+        if not _is_model_id(model):
             continue
         if model not in seen:
             seen.add(model)
@@ -118,7 +145,17 @@ class HopperProfile(OpenRouterProfile):
 hopper = HopperProfile(
     name="hopper",
     aliases=("hop",),
+    # "hop" should normalize to "hopper" in the catalog/cache layer too, not
+    # just at provider resolution — otherwise it caches under a second key
+    # that cache invalidation never clears.
+    catalog_aliases=True,
+    # Hopper re-exposes OpenRouter's multi-vendor catalog, not a first-party
+    # vendor list.
+    aggregator=True,
     env_vars=("OPENROUTER_API_KEY",),
+    # Share OpenRouter's override so proxy/residency-endpoint users are not
+    # pinned to openrouter.ai while the bundled provider follows the var.
+    base_url_env_var="OPENROUTER_BASE_URL",
     display_name="Hopper",
     description=DESCRIPTION,
     signup_url="https://openrouter.ai/keys",

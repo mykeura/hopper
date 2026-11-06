@@ -33,7 +33,9 @@ Hopper only works with **OpenRouter**: model IDs must be the ones listed on
 [openrouter.ai/models](https://openrouter.ai/models), in the form
 `provider/model-name` (optionally with OpenRouter's `:free` suffix for free
 variants — e.g. `qwen/qwen3.8-27b:free`). Traffic and billing go
-through your normal `OPENROUTER_API_KEY`.
+through your normal `OPENROUTER_API_KEY`; if you point OpenRouter at a
+proxy or regional endpoint with `OPENROUTER_BASE_URL`, Hopper follows the
+same override.
 
 Hopper stores its catalog in a single text file under your Hermes home
 directory:
@@ -108,7 +110,8 @@ its exact location) in any text editor:
   - `provider/model-name:free` — free variant, e.g.
     `inclusionai/ling-3.0-flash-vl:free`
 - Blank lines are ignored.
-- Lines starting with `#` are comments.
+- Lines starting with `#` are comments (note: the `add`/`remove`/`reset`
+  commands rewrite the file, so only the built-in header comments are kept).
 - Duplicate IDs are saved once.
 - An empty catalog is valid: it hides every Hopper model.
 
@@ -136,6 +139,11 @@ Copy this directory to `~/.hermes/plugins/hopper` (or install it with
 
 Your existing model list (`~/.hermes/plugin-data/hopper/models.txt`) is kept
 on upgrade.
+
+To unload Hopper, run `hermes plugins remove hopper`. Note that
+`hermes plugins disable` does not currently unload model providers — the
+provider keeps registering until the plugin directory is removed (an
+upstream Hermes limitation, not something Hopper can opt out of).
 
 ## A small way to support the project
 
